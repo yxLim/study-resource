@@ -1,0 +1,228 @@
+--创建表，同时设置comment
+create table class(
+    classno number primary key,
+    cname nvarchar2(10) not null
+);
+comment on table class is '班级表';
+comment on column class.classno is '班级编号';
+comment on column class.cname is '班级名称';
+
+create table students(
+    stuno number primary key,
+    sname nvarchar2(20) not null,
+    sex varchar2(3) not null check(sex in('男','女')),
+    birthday date,
+    email varchar2(20) unique,
+    classno references class(classno),
+    stucomment nvarchar2(50)
+);
+comment on table students is '学生表';
+comment on column students.stuno is '学号';
+comment on column students.sname is '姓名';
+comment on column students.sex is '性别';
+comment on column students.birthday is '生日';
+comment on column students.email is '电子邮件';
+comment on column students.classno is '班级编号';
+comment on column students.stucomment is '注释';
+
+create table course(
+    courseno number primary key,
+    coursename nvarchar2(50) not null unique
+);
+comment on table course is '课程表';
+comment on column course.courseno is '课程号';
+comment on column course.coursename is '课程名';
+
+create table score(
+    stuno number,
+    courseno number,
+    score number not null,
+    constraint union_pk primary key(stuno,courseno)
+);
+comment on table score is '成绩表';
+comment on column score.stuno is '学号';
+comment on column score.courseno is '课程号';
+comment on column score.score is '成绩';
+
+--插入数据
+insert into class values(1,'一班');
+insert into class values(2,'二班');
+insert into class values(3,'三班');
+insert into students values(1,'张三','男',TO_DATE('2000-01-02','YYYY-MM-DD'),'zhangsan@163.com',1,null);
+insert into students values(2,'李四','男',TO_DATE('2000-03-03','YYYY-MM-DD'),'lisi@163.com',2,null);
+insert into students values(3,'李文','男',TO_DATE('2000-05-23','YYYY-MM-DD'),'liwen@163.com',3,null);
+insert into students values(4,'林夕','女',TO_DATE('2000-08-01','YYYY-MM-DD'),'linxi@126.com',3,null);
+insert into course values(1,'语文');
+insert into course values(2,'数学');
+insert into course values(3,'英语');
+insert into score values(1,1,82);
+insert into score values(1,2,80);
+insert into score values(1,3,81);
+insert into score values(2,1,87);
+insert into score values(2,2,90);
+insert into score values(2,3,80);
+insert into score values(3,1,69);
+insert into score values(3,2,60);
+insert into score values(3,3,75);
+insert into score values(4,1,95);
+insert into score values(4,2,97);
+insert into score values(4,3,100);
+commit;
+rollback;
+
+--创建索引（students）
+create index student_sname_idx on students(sname);
+
+--创建序列
+create sequence Stuseq
+    start with 20190001
+    increment by 1
+    maxvalue 20199999
+    minvalue 20190001;
+
+--创建触发器（students.stuno）
+create or replace trigger students_trigger
+    before insert on students
+    for each row
+begin
+    select stuseq.nextval into :new.stuno from dual;
+end;
+
+--向students插入两条数据
+insert into students values(null,'Tom','男',TO_DATE('2000/03/02','YYYY/MM/DD'),'Tom@163.com',1,null);
+insert into students values(null,'Jerry','男',TO_DATE('2001/09/04','YYYY/MM/DD'),'Jerry@163.com',2,null);
+insert into students values(null,'张三','男',TO_DATE('2000-01-02','YYYY-MM-DD'),'zhangsan@163.com',1,null);
+insert into students values(null,'李四','男',TO_DATE('2000-03-03','YYYY-MM-DD'),'lisi@163.com',2,null);
+insert into students values(null,'李文','男',TO_DATE('2000-05-23','YYYY-MM-DD'),'liwen@163.com',3,null);
+insert into students values(null,'林夕','女',TO_DATE('2000-08-01','YYYY-MM-DD'),'linxi@126.com',3,null);
+insert into score values(20190001,1,82);
+insert into score values(20190001,2,80);
+insert into score values(20190001,3,81);
+insert into score values(20190002,1,87);
+insert into score values(20190002,2,90);
+insert into score values(20190002,3,80);
+insert into score values(20190003,1,69);
+insert into score values(20190003,2,60);
+insert into score values(20190003,3,69);
+insert into score values(20190004,1,60);
+insert into score values(20190004,2,75);
+insert into score values(20190004,3,69);
+insert into score values(20190005,1,60);
+insert into score values(20190005,2,75);
+insert into score values(20190005,3,75);
+insert into score values(20190006,1,95);
+insert into score values(20190006,2,97);
+insert into score values(20190006,3,100);
+commit;
+
+--删除三班没有成绩的同学
+delete from students where classno=3 and stuno not in(select distinct(stuno) from score);
+
+--将所有学生课程为“语文”的成绩加5分
+update score s set score=s.score+5 where s.courseno=(select c.courseno from course c where c.coursename='语文');
+
+--查询一班语文成绩合格（60分以上）的学生信息(只显示Students 表信息)
+select st.* 
+from 
+    students st,
+    class cl,
+    (select s.stuno 
+    from 
+        score s,
+        course c 
+    where 
+        s.courseno=c.courseno 
+        and c.coursename='语文' 
+        and s.score>=60) jk
+where 
+    st.classno=cl.classno 
+    and st.stuno=jk.stuno 
+    and cl.cname='一班';
+
+--统计各科人数，最高分、最低分、各科平均分，并按各科平均分降序排序
+select  
+    c.coursename "科目",
+    g.num "各科人数",
+    g.max_score "最高分",
+    g.min_score "最低分",
+    g.avg_score "平均分"
+from 
+    course c,
+    (select 
+        count(s.stuno) num,
+        max(s.score) max_score,
+        min(s.score) min_score,
+        avg(s.score) avg_score,
+        s.courseno 
+    from score s 
+    group by s.courseno) g
+where c.courseno=g.courseno
+order by g.avg_score desc;
+
+--查询数学成绩前5名的学生信息（只显示Students 表信息）
+select stuno,sname,sex,birthday,email,classno,stucomment,score from 
+        (select st.*,c.coursename,s.score 
+        from score s,course c,students st 
+        where 
+            s.courseno=c.courseno 
+            and st.stuno=s.stuno
+            and c.coursename='数学' 
+            order by s.score desc)
+    where rownum<=5;
+
+--创建视图View_Students，要求视图中包含所有学生的stuno, sname, BIRTHDAY ,classno,
+--CName, CourseNO, CourseName, Score等属性，没有成绩的不用显示
+create or replace view view_students
+as 
+    select stu.stuno,stu.sname,stu.birthday,stu.classno,cl.cname,co.courseno,co.coursename,sc.score 
+    from students stu,class cl,course co,score sc 
+    where 
+        stu.classno=cl.classno 
+        and stu.stuno=sc.stuno
+        and sc.courseno=co.courseno;
+
+--创建一个Function 可以根据学生的学号和课程名查询到该学生的课程成绩情况，没有成绩的返回null
+create or replace function return_score_function(v_stuno in number,v_coursename in nvarchar2)
+return number
+is
+v_return_score number;
+begin
+    select s.score into v_return_score 
+    from score s,course c 
+    where s.courseno=c.courseno 
+        and s.stuno=v_stuno 
+        and c.coursename=v_coursename;
+    return v_return_score;
+end;
+--调用函数
+select return_score_function(20190000,'数学') from dual;
+
+--创建一个Store Procedure，规则如下
+--计算出每个学生三科（语数英）的平均分，没有成绩的当0分处理。
+--如果平均分大于等于85，评为”优” ；70~84分，评为‘良’；50~69分 评为”中”；小于50分评为”差”。
+--所有评价统一update到Students.StuComment中（覆盖它的值）
+create or replace procedure comment_procedure 
+is
+    cursor students_cursor is
+        select stuno from students;
+    v_temp_score score.score%type;
+begin
+    for stu in students_cursor loop
+        select avg(s.score) into v_temp_score from score s where s.stuno=stu.stuno;
+        if v_temp_score>=85 then
+            update students set stucomment='优' where stuno=stu.stuno;
+        elsif v_temp_score>=70 then
+            update students set stucomment='良' where stuno=stu.stuno;
+        elsif v_temp_score>=50 then
+            update students set stucomment='中' where stuno=stu.stuno;
+        else
+            update students set stucomment='差' where stuno=stu.stuno;
+        end if;
+    end loop;
+    commit;
+end;
+--调用存储过程
+begin
+    comment_procedure;
+end;
+
