@@ -1,0 +1,68 @@
+﻿1、FIN Uipath QAS
+IP：10.37.35.195(86)
+Account：WHQ0803
+password：G4fAb8Y!1126
+
+2、MM UiPath Upgrade QAS
+IP : 10.37.35.197
+Server Name : RPAROBAPQA3
+Account : WHQ0614
+PWD：G4fAb8Y!1126
+
+3、FIN Uipath PRD
+IP : 10.37.32.233
+Server Name : RPAROBAPPA1
+Account:WHQ0802
+password:G4fAb8Y!1126
+
+4、MM Hub UiPath Upgrade PRD
+IP : 10.37.32.235
+Server Name : RPAROBAPPA3
+Account : WHQ0615
+PWD：G4fAb8Y!1126
+
+5、coe
+\\10.37.35.86\rpa\COE Platform IT Training
+
+6、7700server
+\\10.41.21.36\gsdc\ML7700
+
+7、7720working area
+https://trello.com/b/6vnGAy8n/ml7720-working-area
+
+8、orchestrator
+https://rpaorcappa1.whq.wistron/jobs
+https://rpaorcapqa1.whq.wistron/jobs
+
+9、usr System(QAS)
+DB:HOST=10.34.208.145
+   PORT=1521
+   SERVER=DEDICATED
+   SID=hqdb11
+   UID=usr
+   PWD=user
+Server:IP=10.34.208.61
+       Account=CCMTest
+       PWD=TestMLL!5249
+
+10、PLM System URL
+https://plmupg11.wistron.com/Windchill/netmarkets/login/login.jsp
+Account：wcadmin
+Password:wcadmin
+
+11、AA Project
+Server:
+(1)Bot Creator :10.37.39.90/10.37.39.121(new)
+(2)IQBot       :10.37.39.91/10.37.39.122(new)
+Please use share folder to access IQBot Server
+User:
+90/121 Server <==> Account:RPADev7    Password:G4fAb8Y!1126
+
+
+12、
+C:\User\(Account)\.Nuget\Packages\(Process Name)\(版號\lib\net45
+Account是機器人帳號
+Process name就是找你要的Process
+版號我一般就是看最新的
+
+
